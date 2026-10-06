@@ -125,7 +125,7 @@ test('POST /api/socios: automatiza la fecha con los días exactos de cada pase (
   for (const [tipoPase, dias] of casos) {
     const { status, body } = await api('POST', '/api/socios', {
       nombre: `Socio ${tipoPase}`,
-      telefono: '555-0000',
+      telefono: `555-${dias}`, // único por socio: la BD rechaza teléfonos repetidos
       tipoPase,
     });
     assert.equal(status, 201);
@@ -199,6 +199,93 @@ test('POST /api/socios: rechaza tipoPase inválido con 400', async () => {
   assert.equal(status, 400);
   assert.match(body.error, /tipoPase/i);
   assert.match(body.error, /VISITA/);
+});
+
+test('POST /api/socios: rechaza un teléfono duplicado con 409', async () => {
+  const primero = await api('POST', '/api/socios', {
+    nombre: 'Ana Perez',
+    telefono: '555-1234',
+    tipoPase: 'MENSUAL',
+  });
+  assert.equal(primero.status, 201);
+
+  // Distinto en el body, igual después del trim: sigue siendo el mismo contacto.
+  const segundo = await api('POST', '/api/socios', {
+    nombre: 'Luis Duplicado',
+    telefono: '  555-1234  ',
+    tipoPase: 'ANUAL',
+  });
+
+  assert.equal(segundo.status, 409);
+  assert.match(segundo.body.error, /telefono/i);
+  assert.equal(await prisma.socio.count(), 1, 'el duplicado no debe guardarse');
+
+  const guardado = await prisma.socio.findUnique({ where: { telefono: '555-1234' } });
+  assert.equal(guardado.nombre, 'Ana Perez', 'el primer socio debe conservarse');
+});
+
+test('la BD aplica NOT NULL en los campos de contacto', async () => {
+  // Teléfono nulo: lo bloquea la base de datos, no solo la validación de la API.
+  await assert.rejects(
+    () =>
+      prisma.$executeRawUnsafe(
+        'INSERT INTO Socio (nombre, telefono, tipoPase, fechaVencimiento) VALUES (?, ?, ?, ?)',
+        'Sin Telefono',
+        null,
+        'MENSUAL',
+        new Date().toISOString()
+      ),
+    /NOT NULL|constraint/i
+  );
+
+  // Nombre nulo, mismo criterio.
+  await assert.rejects(
+    () =>
+      prisma.$executeRawUnsafe(
+        'INSERT INTO Socio (nombre, telefono, tipoPase, fechaVencimiento) VALUES (?, ?, ?, ?)',
+        null,
+        '555-0001',
+        'MENSUAL',
+        new Date().toISOString()
+      ),
+    /NOT NULL|constraint/i
+  );
+
+  assert.equal(await prisma.socio.count(), 0);
+});
+
+test('la BD impide teléfonos duplicados con el índice único de la migración', async () => {
+  const indices = await prisma.$queryRawUnsafe(
+    "SELECT name FROM sqlite_master WHERE type = 'index' AND tbl_name = 'Socio'"
+  );
+  assert.ok(
+    indices.some((i) => i.name === 'Socio_telefono_key'),
+    `falta el índice único Socio_telefono_key, obtuve: ${JSON.stringify(indices)}`
+  );
+
+  await prisma.socio.create({
+    data: {
+      nombre: 'Original',
+      telefono: '555-7777',
+      tipoPase: 'MENSUAL',
+      fechaVencimiento: new Date(),
+    },
+  });
+
+  // Insert directo en la BD: la restricción vive en SQLite, no en el código.
+  await assert.rejects(
+    () =>
+      prisma.$executeRawUnsafe(
+        'INSERT INTO Socio (nombre, telefono, tipoPase, fechaVencimiento) VALUES (?, ?, ?, ?)',
+        'Duplicado',
+        '555-7777',
+        'ANUAL',
+        new Date().toISOString()
+      ),
+    /UNIQUE|constraint/i
+  );
+
+  assert.equal(await prisma.socio.count(), 1);
 });
 
 test('GET /api/socios: lista ordenada por fecha de vencimiento ascendente', async () => {

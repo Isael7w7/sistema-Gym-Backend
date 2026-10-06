@@ -34,8 +34,11 @@ model Usuario {
 
 model Socio {
   id              Int       @id @default(autoincrement())
+  // Campos de contacto obligatorios (NOT NULL): el alta los exige siempre.
   nombre          String
-  telefono        String
+  // Único a nivel de base de datos: impide teléfonos duplicados por accidente,
+  // incluso si dos peticiones llegan al mismo tiempo.
+  telefono        String    @unique
   fechaInicio     DateTime  @default(now())
   fechaVencimiento DateTime
   tipoPase        TipoPase

@@ -4,7 +4,7 @@
 CREATE TABLE IF NOT EXISTS "Socios" (
     "id"              INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "nombre"          TEXT    NOT NULL,
-    "telefono"        TEXT    NOT NULL,
+    "telefono"        TEXT    NOT NULL UNIQUE,
     "tipo_pase"       TEXT    NOT NULL CHECK ("tipo_pase" IN ('VISITA', 'SEMANAL', 'MENSUAL', 'ANUAL')),
     "fecha_vencimiento" DATETIME NOT NULL
 );

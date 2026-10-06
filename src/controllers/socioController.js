@@ -65,6 +65,15 @@ function esTextoNoVacio(valor) {
   return typeof valor === 'string' && valor.trim().length > 0;
 }
 
+// El índice único de Socio.telefono es la garantía final contra duplicados
+// (incluso con peticiones simultáneas); aquí solo lo traducimos a un 409 claro.
+function esTelefonoDuplicado(error) {
+  if (error?.code !== 'P2002') return false;
+  const target = error.meta?.target;
+  const campos = Array.isArray(target) ? target.join(',') : String(target ?? '');
+  return campos === '' || campos.includes('telefono');
+}
+
 async function listarSocios(req, res, next) {
   try {
     const socios = await prisma.socio.findMany({
@@ -96,15 +105,25 @@ async function crearSocio(req, res, next) {
 
     // Fechas generadas por el sistema: cualquier fechaVencimiento/fechaInicio
     // que llegue en el body se ignora (automatización, no cálculo manual).
-    const socio = await prisma.socio.create({
-      data: {
-        nombre: nombre.trim(),
-        telefono: telefono.trim(),
-        tipoPase,
-        fechaInicio: new Date(),
-        fechaVencimiento: calcularFechaVencimiento(tipoPase),
-      },
-    });
+    let socio;
+    try {
+      socio = await prisma.socio.create({
+        data: {
+          nombre: nombre.trim(),
+          telefono: telefono.trim(),
+          tipoPase,
+          fechaInicio: new Date(),
+          fechaVencimiento: calcularFechaVencimiento(tipoPase),
+        },
+      });
+    } catch (error) {
+      if (esTelefonoDuplicado(error)) {
+        return res.status(409).json({
+          error: `Ya existe un socio con el telefono ${telefono.trim()}`,
+        });
+      }
+      throw error;
+    }
 
     res.status(201).json(conEstatus(socio));
   } catch (error) {

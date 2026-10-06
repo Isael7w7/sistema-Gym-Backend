@@ -15,7 +15,11 @@ const openapiSpec = {
         properties: {
           id: { type: 'integer', example: 1 },
           nombre: { type: 'string', example: 'Ana Perez' },
-          telefono: { type: 'string', example: '555-1234' },
+          telefono: {
+            type: 'string',
+            example: '555-1234',
+            description: 'Obligatorio (NOT NULL) y único: no se permiten teléfonos duplicados.',
+          },
           fechaInicio: { type: 'string', format: 'date-time', example: '2026-10-06T17:00:00.000Z' },
           fechaVencimiento: { type: 'string', format: 'date-time', example: '2026-11-06T23:59:59.999Z' },
           tipoPase: { type: 'string', enum: ['VISITA', 'SEMANAL', 'MENSUAL', 'ANUAL'] },
@@ -46,7 +50,11 @@ const openapiSpec = {
         required: ['nombre', 'telefono', 'tipoPase'],
         properties: {
           nombre: { type: 'string', example: 'Ana Perez' },
-          telefono: { type: 'string', example: '555-1234' },
+          telefono: {
+            type: 'string',
+            example: '555-1234',
+            description: 'Obligatorio (NOT NULL) y único: repetir un teléfono devuelve 409.',
+          },
           tipoPase: { type: 'string', enum: ['VISITA', 'SEMANAL', 'MENSUAL', 'ANUAL'] },
         },
       },
@@ -109,6 +117,10 @@ const openapiSpec = {
           },
           400: {
             description: 'Datos inválidos',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          409: {
+            description: 'Teléfono duplicado: ya existe un socio con ese número',
             content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
           },
         },
