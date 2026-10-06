@@ -131,7 +131,7 @@ const openapiSpec = {
         tags: ['Socios'],
         summary: 'Cobrar y renovar la membresía de un socio',
         description:
-          'Registra un pago y renueva la membresía sumando automáticamente los días exactos del pase (+1, +7, +30 o +365) sobre la fecha de vencimiento actual; si el pase ya venció, la suma parte desde hoy.',
+          'Registra un pago y renueva la membresía reiniciando la vigencia desde la fecha de cobro: el nuevo vencimiento es fin de día de hoy + los días exactos del pase (+1, +7, +30 o +365). Los días restantes del periodo anterior no se acumulan.',
         parameters: [
           {
             name: 'id',

@@ -157,9 +157,9 @@ async function cobrarSocio(req, res, next) {
       return res.status(404).json({ error: 'Socio no encontrado' });
     }
 
-    const ahora = new Date();
-    const base = new Date(socio.fechaVencimiento) > ahora ? socio.fechaVencimiento : ahora;
-    const fechaVencimientoRenovada = calcularFechaVencimiento(socio.tipoPase, base);
+    // Requerimiento (Bloque 1, pregunta 1): la vigencia se reinicia desde la fecha de cobro.
+    // Los días que le sobraban al socio NO se acumulan al nuevo periodo.
+    const fechaVencimientoRenovada = calcularFechaVencimiento(socio.tipoPase, new Date());
 
     const [pago, socioActualizado] = await prisma.$transaction([
       prisma.pago.create({

@@ -7,6 +7,7 @@
     "dev": "nodemon src/index.js",
     "start": "node src/index.js",
     "prisma:generate": "prisma generate",
+    "setup": "prisma generate && prisma migrate deploy",
     "db:migrate": "prisma migrate dev --name init",
     "test": "node --test \"test/*.test.js\""
   },

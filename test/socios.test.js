@@ -303,13 +303,21 @@ test('GET /api/socios: lista ordenada por fecha de vencimiento ascendente', asyn
   );
 });
 
-test('POST /api/socios/:id/cobrar: registra el pago y renueva la membresía', async () => {
+test('POST /api/socios/:id/cobrar: registra el pago y reinicia la vigencia desde la fecha de cobro', async () => {
   const creado = await api('POST', '/api/socios', {
     nombre: 'Carlos Ruiz',
     telefono: '555-9999',
     tipoPase: 'SEMANAL',
   });
-  const vencimientoAnterior = new Date(creado.body.fechaVencimiento);
+
+  // Vigencia futura artificial a 100 días: si la regla acumulara, el cobro daría hoy + 107 días.
+  const vigenciaLejana = new Date();
+  vigenciaLejana.setHours(23, 59, 59, 999);
+  vigenciaLejana.setDate(vigenciaLejana.getDate() + 100);
+  await prisma.socio.update({
+    where: { id: creado.body.id },
+    data: { fechaVencimiento: vigenciaLejana },
+  });
 
   const { status, body } = await api('POST', `/api/socios/${creado.body.id}/cobrar`, {
     monto: 150,
@@ -321,18 +329,48 @@ test('POST /api/socios/:id/cobrar: registra el pago y renueva la membresía', as
   assert.equal(body.pago.monto, 150);
   assert.equal(body.pago.metodoPago, 'EFECTIVO');
   assert.equal(body.pago.socioId, creado.body.id);
-  // Renovación automática: +7 días exactos sobre el vencimiento vigente (SEMANAL)
-  const vencimientoEsperado = new Date(vencimientoAnterior);
+
+  // Reinicio desde la fecha de cobro: +7 días (SEMANAL) contados desde hoy, sin acumular lo anterior.
+  const vencimientoEsperado = new Date();
+  vencimientoEsperado.setHours(23, 59, 59, 999);
   vencimientoEsperado.setDate(vencimientoEsperado.getDate() + 7);
   assert.equal(
     new Date(body.socio.fechaVencimiento).getTime(),
     vencimientoEsperado.getTime(),
-    'la renovación debe sumar exactamente +7 días (SEMANAL)'
+    'la vigencia debe reiniciarse desde la fecha de cobro (+7 días exactos)'
   );
 
   assert.equal(await prisma.pago.count(), 1);
   const enBD = await prisma.socio.findUnique({ where: { id: creado.body.id } });
   assert.equal(enBD.fechaVencimiento.getTime(), new Date(body.socio.fechaVencimiento).getTime());
+});
+
+test('POST /api/socios/:id/cobrar: un pase vencido también se reinicia desde la fecha de cobro', async () => {
+  const creado = await api('POST', '/api/socios', {
+    nombre: 'Vencida Ana',
+    telefono: '555-8888',
+    tipoPase: 'MENSUAL',
+  });
+
+  const vencida = new Date();
+  vencida.setDate(vencida.getDate() - 40);
+  await prisma.socio.update({ where: { id: creado.body.id }, data: { fechaVencimiento: vencida } });
+
+  const { status, body } = await api('POST', `/api/socios/${creado.body.id}/cobrar`, {
+    monto: 500,
+    metodoPago: 'TRANSFERENCIA',
+  });
+
+  assert.equal(status, 201);
+  const esperado = new Date();
+  esperado.setHours(23, 59, 59, 999);
+  esperado.setDate(esperado.getDate() + 30);
+  assert.equal(
+    new Date(body.socio.fechaVencimiento).getTime(),
+    esperado.getTime(),
+    'MENSUAL vencido debe volver a vencer hoy + 30 días'
+  );
+  assert.equal(body.socio.estatusColor, 'verde');
 });
 
 test('POST /api/socios/:id/cobrar: rechaza monto <= 0 con 400', async () => {
