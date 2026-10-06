@@ -89,6 +89,13 @@ npm run dev            # no necesita npm install
 
 Abre http://localhost:8081/ → habla con esta API en `http://localhost:3000/api` (ambos en la misma máquina, sin cambios de configuración).
 
+## Solución de problemas
+
+- **`EPERM ... query_engine-windows.dll.node` al correr `npm run setup`**: el servidor está corriendo y bloquea el binario de Prisma. Detén el servidor, vuelve a correr `npm run setup` y arranca de nuevo.
+- **`Error: Invalid input` o que la BD esté vacía**: falta `prisma/dev.db`; corre `npm run setup`.
+- **`EADDRINUSE` / ya hay otro proceso en el puerto**: cambia `PORT` en `.env`.
+- **`ECONNREFUSED` desde el front**: verifica que el backend esté en `http://localhost:3000/api` (valor fijo en `frontend/src/js/modules/api.js`).
+
 ## Estructura
 
 ```
