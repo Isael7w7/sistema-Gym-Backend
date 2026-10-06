@@ -1,0 +1,52 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  RECEPCIONISTA
+}
+
+enum TipoPase {
+  VISITA
+  SEMANAL
+  MENSUAL
+  ANUAL
+}
+
+enum MetodoPago {
+  EFECTIVO
+  TRANSFERENCIA
+}
+
+model Usuario {
+  id       Int    @id @default(autoincrement())
+  nombre   String
+  username String @unique
+  password String
+  rol      Role   @default(RECEPCIONISTA)
+}
+
+model Socio {
+  id              Int       @id @default(autoincrement())
+  nombre          String
+  telefono        String
+  fechaInicio     DateTime  @default(now())
+  fechaVencimiento DateTime
+  tipoPase        TipoPase
+  pagos           Pago[]
+}
+
+model Pago {
+  id         Int        @id @default(autoincrement())
+  socioId    Int
+  socio      Socio      @relation(fields: [socioId], references: [id])
+  monto      Float
+  metodoPago MetodoPago
+  fechaPago  DateTime   @default(now())
+}
