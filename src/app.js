@@ -17,6 +17,15 @@ app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { explorer: t
 
 app.use('/api/socios', socioRoutes);
 
+app.get('/', (req, res) => {
+  res.json({
+    mensaje: 'API Sistema Gimnasio',
+    version: '1.0.0',
+    docs: '/api-docs',
+    socios: '/api/socios',
+  });
+});
+
 app.use((req, res) => {
   res.status(404).json({
     error: `Ruta no encontrada: ${req.method} ${req.originalUrl}`,
