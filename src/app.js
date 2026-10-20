@@ -16,6 +16,7 @@ app.get('/api-docs.json', (req, res) => {
 });
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { explorer: true }));
 
+app.use('/api/auth', authRoutes);
 app.use('/api/socios', socioRoutes);
 app.use('/api/auth', authRoutes);
 
@@ -24,6 +25,7 @@ app.get('/', (req, res) => {
     mensaje: 'API Sistema Gimnasio',
     version: '1.0.0',
     docs: '/api-docs',
+    auth: '/api/auth/login',
     socios: '/api/socios',
   });
 });

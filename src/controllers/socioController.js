@@ -139,7 +139,7 @@ async function cobrarSocio(req, res, next) {
       return res.status(400).json({ error: 'El id del socio debe ser un numero valido' });
     }
 
-    const { monto, metodoPago } = req.body;
+    const { monto, metodoPago, tipoPase } = req.body;
 
     if (typeof monto !== 'number' || !Number.isFinite(monto) || monto <= 0) {
       return res.status(400).json({ error: 'El campo monto es obligatorio y debe ser mayor a 0' });
@@ -157,9 +157,12 @@ async function cobrarSocio(req, res, next) {
       return res.status(404).json({ error: 'Socio no encontrado' });
     }
 
+    // Minuta Requerimiento 9: Flexibilidad para cambiar de membresía al renovar
+    const nuevoTipoPase = (tipoPase && TIPOS_PASE.includes(tipoPase)) ? tipoPase : socio.tipoPase;
+
     // Requerimiento (Bloque 1, pregunta 1): la vigencia se reinicia desde la fecha de cobro.
     // Los días que le sobraban al socio NO se acumulan al nuevo periodo.
-    const fechaVencimientoRenovada = calcularFechaVencimiento(socio.tipoPase, new Date());
+    const fechaVencimientoRenovada = calcularFechaVencimiento(nuevoTipoPase, new Date());
 
     const [pago, socioActualizado] = await prisma.$transaction([
       prisma.pago.create({
@@ -167,7 +170,10 @@ async function cobrarSocio(req, res, next) {
       }),
       prisma.socio.update({
         where: { id },
-        data: { fechaVencimiento: fechaVencimientoRenovada },
+        data: {
+          tipoPase: nuevoTipoPase,
+          fechaVencimiento: fechaVencimientoRenovada,
+        },
       }),
     ]);
 
