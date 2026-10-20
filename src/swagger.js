@@ -33,6 +33,8 @@ const openapiSpec = {
             example: 30,
             description: 'Días restantes de vigencia; -1 si el pase ya venció',
           },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
         },
       },
       Pago: {

@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "setup": "prisma generate && prisma migrate deploy",
     "db:migrate": "prisma migrate dev --name init",
-    "test": "node --test \"test/*.test.js\""
+    "test": "node --test \"test/*.test.js\"",
+    "db:seed": "node prisma/seed.js"
   },
   "keywords": [],
   "author": "",
@@ -17,9 +18,11 @@
   "type": "commonjs",
   "dependencies": {
     "@prisma/client": "^6.19.3",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.6",
     "dotenv": "^18.0.5",
     "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
     "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {

@@ -9,7 +9,7 @@ const { execSync } = require('node:child_process');
 const { test, before, after, beforeEach } = require('node:test');
 
 // Crea/actualiza el esquema de la BD de tests a partir de prisma/schema.prisma
-execSync('npx prisma db push --skip-generate --accept-data-loss', {
+execSync('npx prisma db push --skip-generate --force-reset', {
   cwd: path.resolve(__dirname, '..'),
   env: { ...process.env },
   stdio: 'pipe',

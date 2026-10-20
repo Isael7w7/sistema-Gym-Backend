@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const socioRoutes = require('./routes/socioRoutes');
+const authRoutes = require('./routes/authRoutes');
 const openapiSpec = require('./swagger');
 
 const app = express();
@@ -16,6 +17,7 @@ app.get('/api-docs.json', (req, res) => {
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { explorer: true }));
 
 app.use('/api/socios', socioRoutes);
+app.use('/api/auth', authRoutes);
 
 app.get('/', (req, res) => {
   res.json({

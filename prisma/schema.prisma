@@ -7,8 +7,8 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-enum Role {
-  ADMIN
+enum Rol {
+  ADMINISTRADOR
   RECEPCIONISTA
 }
 
@@ -25,11 +25,15 @@ enum MetodoPago {
 }
 
 model Usuario {
-  id       Int    @id @default(autoincrement())
-  nombre   String
-  username String @unique
-  password String
-  rol      Role   @default(RECEPCIONISTA)
+  id        Int    @id @default(autoincrement())
+  nombre    String
+  usuario   String @unique
+  password  String
+  rol       Rol    @default(RECEPCIONISTA)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("usuarios")
 }
 
 model Socio {
@@ -43,6 +47,8 @@ model Socio {
   fechaVencimiento DateTime
   tipoPase        TipoPase
   pagos           Pago[]
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }
 
 model Pago {
