@@ -74,6 +74,30 @@ const openapiSpec = {
           pago: { $ref: '#/components/schemas/Pago' },
         },
       },
+      LoginInput: {
+        type: 'object',
+        required: ['username', 'password'],
+        properties: {
+          username: { type: 'string', example: 'admin' },
+          password: { type: 'string', example: 'admin123' },
+        },
+      },
+      LoginResponse: {
+        type: 'object',
+        properties: {
+          mensaje: { type: 'string', example: 'Inicio de sesión exitoso' },
+          token: { type: 'string', example: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...' },
+          usuario: {
+            type: 'object',
+            properties: {
+              id: { type: 'integer', example: 1 },
+              nombre: { type: 'string', example: 'Administrador Principal' },
+              username: { type: 'string', example: 'admin' },
+              rol: { type: 'string', example: 'ADMIN' },
+            },
+          },
+        },
+      },
       Error: {
         type: 'object',
         properties: { error: { type: 'string', example: 'El campo nombre es obligatorio' } },
@@ -81,6 +105,50 @@ const openapiSpec = {
     },
   },
   paths: {
+    '/api/auth/login': {
+      post: {
+        tags: ['Autenticación'],
+        summary: 'Iniciar sesión',
+        description: 'Autentica a un usuario del sistema (admin o recepcionista) y retorna su token JWT y datos de sesión.',
+        requestBody: {
+          required: true,
+          content: {
+            'application/json': { schema: { $ref: '#/components/schemas/LoginInput' } },
+          },
+        },
+        responses: {
+          200: {
+            description: 'Autenticación exitosa',
+            content: {
+              'application/json': { schema: { $ref: '#/components/schemas/LoginResponse' } },
+            },
+          },
+          400: {
+            description: 'Faltan campos obligatorios',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+          401: {
+            description: 'Credenciales inválidas',
+            content: { 'application/json': { schema: { $ref: '#/components/schemas/Error' } } },
+          },
+        },
+      },
+    },
+    '/api/auth/me': {
+      get: {
+        tags: ['Autenticación'],
+        summary: 'Obtener usuario autenticado actual',
+        description: 'Retorna los datos del usuario extraídos del token Bearer JWT.',
+        responses: {
+          200: {
+            description: 'Usuario autenticado',
+          },
+          401: {
+            description: 'No autorizado / Token no proporcionado',
+          },
+        },
+      },
+    },
     '/api/socios': {
       get: {
         tags: ['Socios'],

@@ -42,12 +42,14 @@ npm start
 | `npm run setup` | `prisma generate` + `prisma migrate deploy` (crea/actualiza la BD) |
 | `npm run prisma:generate` | Regenera el cliente de Prisma |
 | `npm run db:migrate` | Crea una migración nueva (solo desarrollo) |
-| `npm test` | 21 tests contra `prisma/test.db` (nunca toca `dev.db`) |
+| `npm test` | Tests automáticos contra `prisma/test.db` (nunca toca `dev.db`) |
 
 ## Endpoints
 
 | Método | Ruta | Descripción |
 |---|---|---|
+| POST | `/api/auth/login` | Inicia sesión con `username` y `password`. Devuelve token JWT y datos de usuario. |
+| GET | `/api/auth/me` | Devuelve datos del usuario autenticado (requiere header `Authorization: Bearer <token>`). |
 | GET | `/api/socios` | Lista de socios ordenada por vencimiento, con `estatusColor` y `diasRestantes` |
 | POST | `/api/socios` | Alta de socio. La vigencia la calcula el servidor: fin de día + 1/7/30/365 días. Teléfono repetido → `409` |
 | POST | `/api/socios/:id/cobrar` | Registra un pago y **reinicia la vigencia desde la fecha de cobro** (hoy + días del pase) |
@@ -56,7 +58,12 @@ npm start
 ### Ejemplos
 
 ```bash
-# Listar
+# Iniciar sesión (credenciales por defecto: admin / admin123)
+curl -X POST http://localhost:3000/api/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"admin123"}'
+
+# Listar socios
 curl http://localhost:3000/api/socios
 
 # Alta (tipoPase: VISITA | SEMANAL | MENSUAL | ANUAL)

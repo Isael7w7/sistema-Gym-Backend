@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const swaggerUi = require('swagger-ui-express');
 const socioRoutes = require('./routes/socioRoutes');
+const authRoutes = require('./routes/authRoutes');
 const openapiSpec = require('./swagger');
 
 const app = express();
@@ -15,6 +16,7 @@ app.get('/api-docs.json', (req, res) => {
 });
 app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(openapiSpec, { explorer: true }));
 
+app.use('/api/auth', authRoutes);
 app.use('/api/socios', socioRoutes);
 
 app.get('/', (req, res) => {
@@ -22,6 +24,7 @@ app.get('/', (req, res) => {
     mensaje: 'API Sistema Gimnasio',
     version: '1.0.0',
     docs: '/api-docs',
+    auth: '/api/auth/login',
     socios: '/api/socios',
   });
 });
